@@ -17,7 +17,8 @@ public class CrudService {
     private EntityManager em;
 
     public <T> List<T> list(Class<T> type) {
-        return em.createQuery("from " + type.getSimpleName() + " order by id desc", type).getResultList();
+        String entityName = em.getMetamodel().entity(type).getName();
+        return em.createQuery("from " + entityName + " e order by e.id desc", type).getResultList();
     }
 
     public <T> T get(Class<T> type, Long id) {
