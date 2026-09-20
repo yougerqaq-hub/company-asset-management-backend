@@ -1,28 +1,105 @@
-# 公司资产管理系统后端
+# 公司资产管理系统
 
-基于 Spring Boot 3、JPA 和 MySQL 的资产管理 REST API。系统覆盖角色、部门、用户、权限、资产全流程、审批、提醒、统计和系统参数。
+基于 Spring Boot + Vue 3 的全栈公司资产管理系统。
 
-## 启动
+## 项目结构
 
-1. 在 MySQL 执行 [sql/asset_management.sql](sql/asset_management.sql)。
-2. 按实际情况修改 `src/main/resources/application.yml` 的 MySQL 用户名和密码。
-3. 执行 `mvn spring-boot:run`，服务地址为 `http://localhost:8080`。
+```
+company-asset-management/
+├── backend/              # Spring Boot 后端（Java 17 + JPA + MySQL）
+│   ├── src/              # 源码
+│   ├── sql/              # 数据库初始化脚本
+│   ├── docs/             # API 文档
+│   ├── pom.xml           # Maven 配置
+│   └── README.md         # 后端说明
+├── frontend/             # Vue 3 前端（Vite + Element Plus）
+│   ├── src/              # 源码
+│   ├── package.json      # npm 配置
+│   ├── vite.config.js    # Vite 配置（已配置 /api 代理到 8080）
+│   └── README.md         # 前端说明
+└── README.md             # 本文件
+```
 
-测试账号为 `admin` / `123456`。全部响应遵循：`{"code":200,"message":"操作成功","data":...}`。
+## 环境要求
 
-## 主要接口
+| 软件 | 版本要求 |
+|------|---------|
+| JDK | 17+ |
+| Maven | 3.6+ |
+| Node.js | 16+ |
+| MySQL | 5.7+ / 8.0+ |
 
-| 模块 | 方法与路径 | 功能 |
-|---|---|---|
-| 登录注册 | `POST /api/auth/register`、`POST /api/auth/login` | 注册、登录并返回临时 token |
-| 资产台账 | `GET/POST /api/assets`、`GET/DELETE /api/assets/{id}` | 资产列表、创建修改、详情、删除 |
-| 资产子页面 | `GET/POST /api/assets/operations` | 全部流程记录、通用资产申请 |
-| 采购/领用/归还/核销 | `POST /api/assets/purchase`、`/receive`、`/return`、`/write-off` | 自动创建审批单 |
-| 审批管理 | `GET /api/approvals`、`POST /api/approvals/{id}/approve`、`/reject` | 审批列表、通过、驳回 |
-| 统计分析 | `GET /api/statistics/dashboard` | 总资产、库存、领用、待审批、分类分布 |
-| 系统设置 | `/api/system/departments`、`roles`、`permissions`、`role-permissions`、`users`、`configs` | 对应资源的查询、新增/编辑，含角色授权 |
-| 提醒中心 | `GET/POST /api/notifications`、`PUT /api/notifications/{id}/read` | 消息查询、新建、已读 |
+## 快速启动
 
-所有 Controller 方法均有接口功能注释；资产流程的 `type` 枚举为 `ASSET_APPLY`、`ASSET_PURCHASE`、`ASSET_RECEIVE`、`ASSET_RETURN`、`ASSET_WRITE_OFF`。
+### 第一步：准备数据库
 
-可直接参考 [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md) 与前端联调。
+```bash
+# 登录 MySQL
+mysql -u root -p
+
+# 创建数据库
+CREATE DATABASE asset_management DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+exit;
+```
+
+> 后端默认数据库账号：`root` / 密码：`root`。如不同，请修改 `backend/src/main/resources/application.yml`。
+
+### 第二步：启动后端
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+启动成功标志：看到 `Tomcat started on port(s): 8080` 和 `Started AssetManagementApplication`。
+
+后端接口地址：`http://localhost:8080/api`
+
+### 第三步：启动前端
+
+**新开一个终端窗口**（不要关后端）：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+启动成功后访问：`http://localhost:5173`
+
+前端已配置代理，`/api` 请求自动转发到后端 `http://localhost:8080`，无需额外配置跨域。
+
+## 功能模块
+
+- **认证**：登录、注册、Token 鉴权
+- **首页概览**：资产统计卡片、分类分布饼图、状态分布柱状图、最近流程
+- **资产管理**：资产台账（增删改查）、采购申请、领用申请、归还申请、核销申请、流程记录
+- **审批管理**：待我审批、已办审批、审批详情（通过/驳回）
+- **消息通知**：通知列表、标记已读、全部已读
+- **系统设置**：用户管理、部门管理（树形）、角色管理（权限分配）、权限管理（树形）、系统配置
+
+## 技术栈
+
+### 后端
+- Spring Boot 3.3.5
+- Spring Data JPA / Hibernate
+- Spring Security Crypto（BCrypt 密码加密）
+- MySQL
+- Lombok
+
+### 前端
+- Vue 3（Composition API）
+- Vite 5
+- Element Plus
+- Vue Router 4
+- Pinia
+- Axios
+- ECharts 5
+
+## 注意事项
+
+1. **两个终端都要保持运行**：一个跑后端（8080），一个跑前端（5173）
+2. 前端 `npm install` 只需首次执行，之后直接 `npm run dev` 即可
+3. 后端修改代码后需要重启，前端修改保存后自动热更新
+4. 生产部署：后端 `mvn package` 生成 jar，前端 `npm run build` 生成 dist 目录
